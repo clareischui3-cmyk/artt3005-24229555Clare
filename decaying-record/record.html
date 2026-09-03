@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            perspective: 1000px;
+        }
+        .card-container {
+            width: 460px;
+            height: 520px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        .card-container.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 1rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        .font-mono-specimen {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* Decay effect for specimen fields */
+        .decay-target {
+            transition: filter 15s ease-in-out, opacity 15s ease-in-out, letter-spacing 15s ease-in-out;
+            filter: blur(0px);
+            opacity: 1;
+            letter-spacing: normal;
+        }
+
+        .card-container.flipped .decay-target {
+            filter: blur(6px);
+            opacity: 0.15;
+            letter-spacing: 0.25em;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cardContainer" class="card-container">
+        <!-- Front Face -->
+        <div class="card-face card-front bg-white rounded-2xl shadow-xl p-6 flex flex-col justify-between border border-gray-100 box-border">
+            <!-- Image Placeholder -->
+            <div class="w-full h-[220px] bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300 text-gray-400">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex flex-col items-center text-center my-auto pt-4">
+                <h2 class="text-xl font-semibold text-gray-800 mb-1">Project Archival Record</h2>
+                <p class="text-sm text-gray-500">Record ID: #REC-2026-0903</p>
+            </div>
+
+            <!-- Button at the bottom -->
+            <div>
+                <button onclick="handleArchive()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer">
+                    Archive this
+                </button>
+            </div>
+        </div>
+
+        <!-- Back Face (Archival Specimen Label) -->
+        <div class="card-face card-back bg-amber-50/40 rounded-2xl shadow-xl p-6 flex flex-col justify-between border border-amber-900/20 box-border font-mono-specimen">
+            <div>
+                <!-- Catalog Number Header -->
+                <div class="flex justify-between items-center border-b border-amber-900/20 pb-3 mb-4">
+                    <span class="text-xs tracking-wider text-amber-900/60 uppercase">SPECIMEN RECORD</span>
+                    <span class="text-xs font-bold text-amber-900 decay-target">CAT. #ARC-9904-X</span>
+                </div>
+
+                <!-- Labelled Fields -->
+                <div class="space-y-3 text-xs text-amber-950">
+                    <div>
+                        <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Title</span>
+                        <p class="font-medium mt-0.5 decay-target">Subterranean Echoes & Resonance Mapping</p>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Date and place</span>
+                        <p class="font-medium mt-0.5 decay-target">2026.04.12 — Sector 7 Sub-level B</p>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Recorded by</span>
+                        <p class="font-medium mt-0.5 decay-target">Dr. E. Vance (Field Unit Alpha)</p>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">What was not captured</span>
+                        <p class="font-medium mt-0.5 text-amber-900/70 italic decay-target">Ambient infrasonic frequencies and localized thermal fluctuations.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Flip Back Button -->
+            <div class="pt-2">
+                <button onclick="handleFlipBack()" class="w-full py-2 bg-amber-900/10 hover:bg-amber-900/20 text-amber-900 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer border border-amber-900/20">
+                    Flip to Front
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple custom message box -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none">
+        Record archived successfully!
+    </div>
+
+    <script>
+        function handleArchive() {
+            const card = document.getElementById('cardContainer');
+            card.classList.add('flipped');
+
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 3000);
+        }
+
+        function handleFlipBack() {
+            const card = document.getElementById('cardContainer');
+            card.classList.remove('flipped');
+        }
+    </script>
+
+</body>
+</html>
