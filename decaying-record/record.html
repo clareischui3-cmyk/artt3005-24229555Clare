@@ -40,15 +40,29 @@
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
 
-        /* Decay effect for specimen fields */
-        .decay-target {
+        /* Decay effect applied exclusively to standard field values */
+        .decay-value {
             transition: filter 15s ease-in-out, opacity 15s ease-in-out, letter-spacing 15s ease-in-out;
             filter: blur(0px);
             opacity: 1;
             letter-spacing: normal;
         }
 
-        .card-container.flipped .decay-target {
+        .card-container.flipped .decay-value {
+            filter: blur(6px);
+            opacity: 0.15;
+            letter-spacing: 0.25em;
+        }
+
+        /* Delayed decay effect for the 'What was not captured' field value */
+        .decay-value-delayed {
+            transition: filter 15s ease-in-out 10s, opacity 15s ease-in-out 10s, letter-spacing 15s ease-in-out 10s;
+            filter: blur(0px);
+            opacity: 1;
+            letter-spacing: normal;
+        }
+
+        .card-container.flipped .decay-value-delayed {
             filter: blur(6px);
             opacity: 0.15;
             letter-spacing: 0.25em;
@@ -60,17 +74,17 @@
     <div id="cardContainer" class="card-container">
         <!-- Front Face -->
         <div class="card-face card-front bg-white rounded-2xl shadow-xl p-6 flex flex-col justify-between border border-gray-100 box-border">
-            <!-- Image Placeholder -->
-            <div class="w-full h-[220px] bg-gray-100 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300 text-gray-400">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <!-- Image Container -->
+            <div id="imageContainer" class="w-full h-[220px] bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center border-2 border-dashed border-gray-300 text-gray-400">
+                <svg id="imagePlaceholderSvg" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
             </div>
 
             <!-- Content Area -->
             <div class="flex flex-col items-center text-center my-auto pt-4">
-                <h2 class="text-xl font-semibold text-gray-800 mb-1">Project Archival Record</h2>
-                <p class="text-sm text-gray-500">Record ID: #REC-2026-0903</p>
+                <h2 id="frontTitle" class="text-xl font-semibold text-gray-800 mb-1">Loading Title...</h2>
+                <p id="frontPlace" class="text-sm text-gray-500">Loading place...</p>
             </div>
 
             <!-- Button at the bottom -->
@@ -84,29 +98,32 @@
         <!-- Back Face (Archival Specimen Label) -->
         <div class="card-face card-back bg-amber-50/40 rounded-2xl shadow-xl p-6 flex flex-col justify-between border border-amber-900/20 box-border font-mono-specimen">
             <div>
-                <!-- Catalog Number Header -->
+                <!-- Catalog Number Header (Sharp, no decay) -->
                 <div class="flex justify-between items-center border-b border-amber-900/20 pb-3 mb-4">
                     <span class="text-xs tracking-wider text-amber-900/60 uppercase">SPECIMEN RECORD</span>
-                    <span class="text-xs font-bold text-amber-900 decay-target">CAT. #ARC-9904-X</span>
+                    <span id="backCatalogId" class="text-xs font-bold text-amber-900">CAT. #...</span>
                 </div>
 
                 <!-- Labelled Fields -->
                 <div class="space-y-3 text-xs text-amber-950">
                     <div>
+                        <!-- Label (Sharp) -->
                         <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Title</span>
-                        <p class="font-medium mt-0.5 decay-target">Subterranean Echoes & Resonance Mapping</p>
+                        <!-- Value (Decaying) -->
+                        <p id="backTitle" class="font-medium mt-0.5 decay-value">Loading...</p>
                     </div>
                     <div>
                         <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Date and place</span>
-                        <p class="font-medium mt-0.5 decay-target">2026.04.12 — Sector 7 Sub-level B</p>
+                        <p id="backDatePlace" class="font-medium mt-0.5 decay-value">Loading...</p>
                     </div>
                     <div>
                         <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">Recorded by</span>
-                        <p class="font-medium mt-0.5 decay-target">Dr. E. Vance (Field Unit Alpha)</p>
+                        <p id="backRecorder" class="font-medium mt-0.5 decay-value">Loading...</p>
                     </div>
                     <div>
                         <span class="block text-[10px] tracking-wider text-amber-900/50 uppercase">What was not captured</span>
-                        <p class="font-medium mt-0.5 text-amber-900/70 italic decay-target">Ambient infrasonic frequencies and localized thermal fluctuations.</p>
+                        <!-- Value (Delayed Decay) -->
+                        <p id="backNotCaptured" class="font-medium mt-0.5 text-amber-900/70 italic decay-value-delayed">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -126,6 +143,63 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if running in a blob preview URL where local fetches are unsupported
+            if (window.location.protocol === 'blob:') {
+                console.warn('Blob protocol detected; falling back to default record data.');
+                const sampleData = {
+                    "catalog_id": "ARC-9904-X",
+                    "title": "Subterranean Echoes & Resonance Mapping",
+                    "date": "2026.04.12",
+                    "place": "Sector 7 Sub-level B",
+                    "recorder": "Dr. E. Vance (Field Unit Alpha)",
+                    "image": "https://placehold.co/460x220/e2e8f0/64748b?text=Specimen+Image",
+                    "not_captured": "Ambient infrasonic frequencies and localized thermal fluctuations.",
+                    "certainty": "High"
+                };
+                populateRecord(sampleData);
+                return;
+            }
+
+            fetch('./record.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    populateRecord(data);
+                })
+                .catch(error => {
+                    console.error('Failed to load record.json:', error);
+                    // Replace page content with requested monospace error message
+                    document.body.innerHTML = `
+                        <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; padding: 2rem; max-width: 600px; margin: auto; text-align: center; color: #374151;">
+                            <p style="font-size: 1rem; line-height: 1.5;">record.json did not load. Are you serving the folder? Open http://localhost:8000</p>
+                        </div>
+                    `;
+                });
+        });
+
+        function populateRecord(data) {
+            // Populate Front
+            document.getElementById('frontTitle').textContent = data.title;
+            document.getElementById('frontPlace').textContent = `${data.date} — ${data.place}`;
+            
+            if (data.image && data.image.trim() !== '') {
+                const imageContainer = document.getElementById('imageContainer');
+                imageContainer.innerHTML = `<img src="${data.image}" alt="${data.title}" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-xs text-red-400\'>Failed to load image</span>';">`;
+            }
+
+            // Populate Back
+            document.getElementById('backCatalogId').textContent = `CAT. #${data.catalog_id}`;
+            document.getElementById('backTitle').textContent = data.title;
+            document.getElementById('backDatePlace').textContent = `${data.date} — ${data.place}`;
+            document.getElementById('backRecorder').textContent = data.recorder;
+            document.getElementById('backNotCaptured').textContent = data.not_captured;
+        }
+
         function handleArchive() {
             const card = document.getElementById('cardContainer');
             card.classList.add('flipped');
