@@ -183,13 +183,19 @@
         });
 
         function populateRecord(data) {
-            // Populate Front
+            // Populate Front Title and Subtitle
             document.getElementById('frontTitle').textContent = data.title;
             document.getElementById('frontPlace').textContent = `${data.date} — ${data.place}`;
             
+            // Populate Front Image
             if (data.image && data.image.trim() !== '') {
                 const imageContainer = document.getElementById('imageContainer');
-                imageContainer.innerHTML = `<img src="${data.image}" alt="${data.title}" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-xs text-red-400\'>Failed to load image</span>';">`;
+                // Ensure correct relative path resolution if path starts with assets/ or similar
+                let imageSrc = data.image;
+                if (!imageSrc.startsWith('http') && !imageSrc.startsWith('/')) {
+                    imageSrc = './' + imageSrc;
+                }
+                imageContainer.innerHTML = `<img src="${imageSrc}" alt="${data.title}" class="w-full h-full object-cover rounded-xl" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-xs text-red-400\'>Failed to load image: ${data.image}</span>';">`;
             }
 
             // Populate Back
